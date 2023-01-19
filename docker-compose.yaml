@@ -1,0 +1,121 @@
+version: "3"
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: always
+    volumes:
+      - ./data:/data/db
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=hb2023
+      - MONGO_INITDB_ROOT_PASSWORD=ecommerce2023
+    networks:
+      - backend
+  auth:
+    build:
+      dockerfile: Dockerfile
+      context: ./Authorization
+    container_name: auth
+    restart: always
+    ports:
+      - 5006:5006
+    networks:
+      - backend
+    env_file:
+      - ./Authorization/.env
+    depends_on:
+      - mongo
+  cart:
+    build:
+      dockerfile: Dockerfile
+      context: ./Cart
+    container_name: cart
+    restart: always
+    ports:
+      - 5005:5005
+    networks:
+      - backend
+    env_file:
+      - ./Cart/.env
+    depends_on:
+      - mongo
+  order:
+    build:
+      dockerfile: Dockerfile
+      context: ./Order
+    container_name: order
+    restart: always
+    ports:
+      - 5004:5004
+    networks:
+      - backend
+    env_file:
+      - ./Order/.env
+    depends_on:
+      - mongo
+  payment:
+    build:
+      dockerfile: Dockerfile
+      context: ./Payment
+    container_name: payment
+    restart: always
+    ports:
+      - 5003:5003
+    networks:
+      - backend
+    env_file:
+      - ./Payment/.env
+    depends_on:
+      - mongo
+  product:
+    build:
+      dockerfile: Dockerfile
+      context: ./Product
+    container_name: product
+    restart: always
+    ports:
+      - 5002:5002
+    networks:
+      - backend
+    env_file:
+      - ./Product/.env
+    depends_on:
+      - mongo
+  user:
+    build:
+      dockerfile: Dockerfile
+      context: ./User
+    container_name: user
+    restart: always
+    ports:
+      - 5001:5001
+    networks:
+      - backend
+    env_file:
+      - ./User/.env
+    depends_on:
+      - mongo
+  nginx-proxy:
+    build:
+      dockerfile: Dockerfile
+      context: ./Gateway
+    container_name: nginx-proxy
+    depends_on:
+      - auth
+      - cart
+      - order
+      - payment
+      - product
+      - user
+    ports:
+      - 80:80
+    networks:
+      - backend
+networks:
+  backend:
+    driver: bridge
+volumes:
+  mongo-data:
+    driver: local
