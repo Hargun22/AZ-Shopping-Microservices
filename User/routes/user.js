@@ -56,10 +56,10 @@ router.get("/stats", isLoggedIn, isAdmin, async (req, res, next) => {
 
 // Get user
 router.get("/:id", (req, res, next) => {
-  User.findById(req.params.id, (err, user) => {
+  User.find({ username: req.params.id }, (err, user) => {
     if (err || !user) return next(err);
-    const { password, ...others } = user._doc;
-    res.status(200).json(others);
+    //const { password, ...others } = user[0]._doc;
+    res.status(200).json(user[0]._doc);
   });
 });
 

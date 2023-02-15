@@ -16,18 +16,17 @@ passport.use(
     (req, username, password, done) => {
       bcrypt.hash(password, 10, async (err, hash) => {
         try {
-          if (err) return done(err);
+          if (err) throw new Error(err.message);
           const user = {
             username,
             password: hash,
             email: req.body.email,
             admin: req.body.admin || false,
           };
-
           const res = await axios.post("http://user:5001", user);
           return done(null, res.data);
         } catch (error) {
-          return done(error);
+          done(error);
         }
       });
     }
@@ -60,13 +59,14 @@ passport.use(
     async (username, password, done) => {
       try {
         const user = await axios.get(`http://user:5001/${username}`);
-
-        if (!user) return done(null, false, { message: "User not found" });
-        const passwordIsValid = bcrypt.compareSync(password, user.password);
-        if (!passwordIsValid)
-          return done(null, false, { message: "Wrong password" });
-
-        return done(null, user, { message: "Logged in successfully" });
+        if (!user) return done(new Error("User not found"));
+        const passwordIsValid = bcrypt.compareSync(
+          password,
+          user.data.password
+        );
+        if (!passwordIsValid) return done(new Error("Wrong password"));
+        console.log("password line");
+        return done(null, user.data, { message: "Logged in successfully" });
       } catch (error) {
         return done(error);
       }
