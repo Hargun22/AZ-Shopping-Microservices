@@ -43,6 +43,9 @@ router.post(
 
       const newProduct = new Product({
         ...req.body,
+        color: JSON.parse(req.body.color),
+        size: JSON.parse(req.body.size),
+        categories: JSON.parse(req.body.categories),
         imageUrl: `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${fileName}`,
         imageName: fileName,
       });
@@ -85,30 +88,52 @@ router.put(
   isAdmin,
   upload.single("image"),
   async (req, res, next) => {
-    const fileName = randomImageName(32);
+    req.body.color = JSON.parse(req.body.color);
+    req.body.size = JSON.parse(req.body.size);
+    req.body.categories = JSON.parse(req.body.categories);
+    if (req.file) {
+      const fileName = randomImageName(32);
 
-    try {
-      const product = await Product.findById(req.params.id);
+      try {
+        const product = await Product.findById(req.params.id);
+        const params = {
+          Bucket: process.env.BUCKET_NAME,
+          Key: product.imageName,
+        };
+        console.log("reached line 96");
+        await s3.send(new DeleteObjectCommand(params));
+        console.log("reached line 98");
+      } catch (err) {
+        return next(err);
+      }
+
       const params = {
         Bucket: process.env.BUCKET_NAME,
-        Key: product.imageName,
+        Key: fileName,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
       };
-      await s3.send(new DeleteObjectCommand(params));
-    } catch (err) {
-      return next(err);
-    }
 
-    const params = {
-      Bucket: process.env.BUCKET_NAME,
-      Key: fileName,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype,
-    };
+      s3.send(new PutObjectCommand(params), (err, data) => {
+        if (err) return next(err);
+        req.body.imageUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${fileName}`;
+        req.body.imageName = fileName;
+        Product.findByIdAndUpdate(
+          req.params.id,
+          {
+            $set: req.body,
+          },
+          { new: true },
 
-    s3.send(new PutObjectCommand(params), (err, data) => {
-      if (err) return next(err);
-      req.body.imageUrl = `https://${process.env.BUCKET_NAME}.s3.${process.env.BUCKET_REGION}.amazonaws.com/${fileName}`;
-      req.body.imageName = fileName;
+          (err, product) => {
+            console.log("reached line 124");
+            if (err) return next(err);
+            console.log("reached line 126");
+            res.status(200).json(product);
+          }
+        );
+      });
+    } else {
       Product.findByIdAndUpdate(
         req.params.id,
         {
@@ -121,7 +146,7 @@ router.put(
           res.status(200).json(product);
         }
       );
-    });
+    }
   }
 );
 
