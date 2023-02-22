@@ -1,10 +1,7 @@
-const express = require("express");
 require("dotenv").config();
 const mongoose = require("mongoose");
-const userRoutes = require("./routes/user");
-const passport = require("passport");
-const cors = require("cors");
-require("./auth/authStrategies");
+const { createServer } = require("./utils/server");
+require("./utils/authStrategies");
 
 mongoose.connect(
   process.env.MONGO_URL,
@@ -21,19 +18,7 @@ mongoose.connect(
   }
 );
 
-const app = express();
-
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(passport.initialize());
-
-app.use("/", userRoutes);
-
-app.use((err, req, res, next) => {
-  console.log(err);
-  res.status(req.status || 500).json({ message: err.message });
-});
+const app = createServer();
 
 app.listen(process.env.PORT || 5001, () => {
   console.log(`Listening on port ${process.env.PORT || 5001}`);
