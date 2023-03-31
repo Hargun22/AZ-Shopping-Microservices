@@ -37,6 +37,19 @@ const getUser = async (req, res, next) => {
   }
 };
 
+const getUserWithName = async (req, res, next) => {
+  try {
+    const user = await UserService.fetchUserWithName(req.params.username);
+    res.status(200).json(user);
+  } catch (error) {
+    if (error.statusCode) {
+      next(error);
+    } else {
+      next(new CustomError(error.message, 404));
+    }
+  }
+};
+
 const updateUser = async (req, res, next) => {
   try {
     if (req.body.password) {
@@ -86,4 +99,5 @@ module.exports = {
   updateUser,
   deleteUser,
   getStats,
+  getUserWithName,
 };

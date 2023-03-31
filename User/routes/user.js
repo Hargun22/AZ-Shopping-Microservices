@@ -7,7 +7,8 @@ const {
   getUser,
   updateUser,
   deleteUser,
-  getStats,
+  getUserWithName,
+  //getStats,
 } = require("../controller/user_controller");
 
 // New user
@@ -19,6 +20,8 @@ router.get("/", isLoggedIn, isAdmin, getAllUsers);
 // Get user
 router.get("/:id", getUser);
 
+router.get("/username/:username", getUserWithName);
+
 // Update user
 router.put("/:id", isLoggedIn, updateUser);
 
@@ -26,6 +29,6 @@ router.put("/:id", isLoggedIn, updateUser);
 router.delete("/:id", isLoggedIn, isAdmin, deleteUser);
 
 // Get user stats
-router.get("/stats", isLoggedIn, isAdmin, getStats);
+//router.get("/stats", isLoggedIn, isAdmin, getStats);
 
 module.exports = router;

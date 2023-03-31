@@ -1,22 +1,39 @@
 require("dotenv").config();
-const mongoose = require("mongoose");
+
 const { createServer } = require("./utils/server");
 require("./utils/authStrategies");
+const { pool } = require("./db");
+const { userSchema } = require("./models/tableschema");
 
-mongoose.connect(
-  process.env.MONGO_URL,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  },
-  (err) => {
-    if (err) {
-      console.log("Error connecting to database");
-    } else {
-      console.log("Connected to database");
-    }
+const connectDb = async () => {
+  try {
+    await pool.connect();
+    console.log("connected to db");
+  } catch (err) {
+    console.log(err);
   }
-);
+};
+
+const createTable = () => {
+  const tableName = "users";
+
+  pool
+    .query(
+      `SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = '${tableName}')`
+    )
+    .then((res) => {
+      if (!res.rows[0].exists) {
+        // create the table if it doesn't exist
+        pool.query(userSchema);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+};
+
+connectDb();
+createTable();
 
 const app = createServer();
 
