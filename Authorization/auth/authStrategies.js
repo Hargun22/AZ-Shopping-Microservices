@@ -58,7 +58,7 @@ passport.use(
     },
     async (username, password, done) => {
       try {
-        const user = await axios.get(`http://user:5001/${username}`);
+        const user = await axios.get(`http://user:5001/username/${username}`);
         if (!user) return done(new Error("User not found"));
         const passwordIsValid = bcrypt.compareSync(
           password,

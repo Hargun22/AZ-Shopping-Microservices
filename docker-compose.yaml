@@ -10,6 +10,21 @@ services:
       - 27017:27017
     networks:
       - backend
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=user
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+    ports:
+      - 5432:5432
+    networks:
+      - backend
   auth:
     build:
       dockerfile: Dockerfile
@@ -93,7 +108,7 @@ services:
     env_file:
       - ./User/.env
     depends_on:
-      - mongo
+      - postgres
   nginx-proxy:
     build:
       dockerfile: Dockerfile
@@ -115,4 +130,6 @@ networks:
     driver: bridge
 volumes:
   mongo-data:
+    driver: local
+  postgres-data:
     driver: local
